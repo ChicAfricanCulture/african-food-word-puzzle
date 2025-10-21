@@ -1,0 +1,222 @@
+<!-- 🌍 Taste of Africa Word Puzzle – Version 6: Cinematic Ending -->
+<div id="africanWordPuzzleV6" class="desert-theme">
+  <h2>🥘 Taste of Africa: Word Puzzle Adventure</h2>
+  <p>Find the hidden African foods and ingredients. When you complete the journey, Africa smiles back at you.</p>
+
+  <!-- Ambient & Drum Audio -->
+  <audio id="drumSound" src="https://yourdomain.com/audio/african-drum.mp3" preload="auto"></audio>
+  <audio id="windSound" src="https://yourdomain.com/audio/desert-wind.mp3" loop autoplay></audio>
+
+  <!-- Puzzle -->
+  <div id="puzzleGrid" class="grid"></div>
+  <div id="wordList"></div>
+  <div id="progressContainer"><div id="progressBar"></div></div>
+
+  <!-- Pop-up Info -->
+  <div id="popup" class="popup hidden"></div>
+
+  <!-- Cinematic Completion Scene -->
+  <div id="completionScene" class="hidden completion-scene">
+    <img src="https://blogger.googleusercontent.com/img/b/SmilingAfricanWoman.jpg"
+         alt="Smiling African woman" class="completion-photo">
+    <div class="gift-grid fadeUp">
+      <div class="gift" data-recipe="north">North African Spice Journey</div>
+      <div class="gift" data-recipe="west">West African Comfort Bowl</div>
+      <div class="gift" data-recipe="east">East African Market Meal</div>
+    </div>
+    <div id="recipeReveal"></div>
+  </div>
+</div>
+
+<style>
+/* === Overall Desert Theme === */
+.desert-theme{
+  font-family:'Lora',serif;
+  background:linear-gradient(180deg,#f8efe3 0%,#f4e4c1 100%);
+  padding:20px;border-radius:10px;color:#4a3b22;
+  text-align:center;max-width:800px;margin:auto;
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);
+  overflow:hidden;position:relative;
+}
+/* === Grid === */
+.grid{display:grid;grid-template-columns:repeat(10,1fr);
+  gap:5px;justify-content:center;margin:20px auto;width:max-content;}
+.cell{width:35px;height:35px;background:#fff5e1;border:1px solid #d4af37;
+  border-radius:5px;display:flex;align-items:center;justify-content:center;
+  font-weight:bold;cursor:pointer;transition:0.2s;user-select:none;}
+.cell:hover{background:#f2d98d;transform:scale(1.05);}
+.selected{background:#d4af37;color:#fff;}
+.found{background:#b99629;color:#fff;animation:shimmer 1s ease-in-out;}
+@keyframes shimmer{
+  0%{box-shadow:0 0 0px #d4af37;}
+  50%{box-shadow:0 0 15px #d4af37;}
+  100%{box-shadow:0 0 0px #d4af37;}
+}
+
+/* === Progress Bar === */
+#progressContainer{width:100%;height:15px;background:#f2e6cc;
+  border-radius:10px;overflow:hidden;margin:15px 0;}
+#progressBar{height:15px;width:0%;background:#d4af37;transition:width 0.4s;}
+
+/* === Popup Info === */
+.popup{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:#fffbe9;border:2px solid #d4af37;padding:15px 20px;border-radius:10px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.25);z-index:1000;width:85%;max-width:320px;
+  color:#4a3b22;font-size:0.95em;animation:floatUp 4s forwards;}
+.popup img{width:100%;border-radius:8px;margin-bottom:10px;}
+.popup a{color:#b57e00;font-weight:bold;text-decoration:none;}
+.popup a:hover{text-decoration:underline;}
+@keyframes floatUp{
+  0%{opacity:0;transform:translate(-50%,-60%) scale(0.9);}
+  10%,80%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-40%) scale(1.05);}
+}
+.hidden{display:none;}
+
+/* === Gifts & Completion Scene === */
+.gift-grid{display:flex;justify-content:center;gap:15px;margin-top:15px;flex-wrap:wrap;}
+.gift{background:#fff5e1;border:2px solid #d4af37;padding:15px;border-radius:10px;
+  cursor:pointer;width:180px;transition:0.3s;}
+.gift:hover{background:#d4af37;color:#fff;transform:scale(1.05);}
+.completion-scene{text-align:center;animation:fadeInScene 3s forwards;}
+.completion-photo{width:100%;max-width:600px;border-radius:12px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.3);margin:auto;display:block;}
+@keyframes fadeInScene{from{opacity:0;transform:scale(0.95);}to{opacity:1;transform:scale(1);}}
+.fadeUp{animation:fadeUp 2.5s ease-in-out;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(40px);}to{opacity:1;transform:translateY(0);}}
+#recipeReveal{margin-top:20px;padding:15px;border:1px solid #d4af37;
+  border-radius:8px;background:#fffbe9;}
+</style>
+
+<script>
+/* === Audio === */
+const drumSound=document.getElementById('drumSound');
+const windSound=document.getElementById('windSound');
+windSound.volume=0.25;
+
+/* === Word Data === */
+const wordsData=[
+  {word:"JOLLOF",country:"West Africa",flag:"🇳🇬",
+   fact:"Jollof rice unites West Africa; each country claims the best recipe!",
+   img:"https://blogger.googleusercontent.com/img/b/JollofRice.jpg",
+   link:"https://www.africanfood.recipes/2024/02/jollof-rice.html"},
+  {word:"EGUSI",country:"Nigeria & Ghana",flag:"🇳🇬",
+   fact:"Egusi seeds are ground melon seeds used to thicken hearty stews.",
+   img:"https://blogger.googleusercontent.com/img/b/EgusiSoup.jpg",
+   link:"https://www.africanfood.recipes/2024/02/egusi-soup.html"},
+  {word:"FUFU",country:"Ghana",flag:"🇬🇭",
+   fact:"Fufu means 'to mash' in Akan and is made from cassava or plantain.",
+   img:"https://blogger.googleusercontent.com/img/b/FufuBowl.jpg",
+   link:"https://www.africanfood.recipes/2024/03/fufu-fries.html"},
+  {word:"UGALI",country:"Kenya",flag:"🇰🇪",
+   fact:"Ugali is a beloved maize-flour staple of East Africa.",
+   img:"https://blogger.googleusercontent.com/img/b/UgaliKenya.jpg",
+   link:"https://www.africanfood.recipes/2024/03/ugali.html"},
+  {word:"INJERA",country:"Ethiopia",flag:"🇪🇹",
+   fact:"Injera is a sourdough flatbread made from teff flour and shared communally.",
+   img:"https://blogger.googleusercontent.com/img/b/InjeraEthiopia.jpg",
+   link:"https://www.africanfood.recipes/2024/04/injera.html"}
+];
+const words=wordsData.map(w=>w.word);
+const gridSize=10;let foundWords=[];
+
+/* === Grid Setup === */
+function emptyGrid(){return Array.from({length:gridSize},()=>Array(gridSize).fill(''));}
+function placeWords(grid){
+  words.forEach(w=>{
+    let placed=false;
+    while(!placed){
+      const row=Math.floor(Math.random()*gridSize);
+      const start=Math.floor(Math.random()*(gridSize-w.length));
+      if(grid[row].slice(start,start+w.length).every(c=>c==='')){
+        for(let i=0;i<w.length;i++)grid[row][start+i]=w[i];
+        placed=true;
+      }
+    }
+  });
+  for(let r=0;r<gridSize;r++){for(let c=0;c<gridSize;c++){
+    if(grid[r][c]==='')grid[r][c]=String.fromCharCode(65+Math.floor(Math.random()*26));}}
+  return grid;
+}
+function renderGrid(grid){
+  const cont=document.getElementById('puzzleGrid');cont.innerHTML='';
+  grid.forEach((row,r)=>{row.forEach((ltr,c)=>{
+    const d=document.createElement('div');
+    d.textContent=ltr;d.className='cell';d.dataset.row=r;d.dataset.col=c;
+    cont.appendChild(d);
+  });});
+}
+function renderWords(){
+  document.getElementById('wordList').innerHTML='<strong>Words:</strong> '+words.join(', ');
+}
+
+/* === Selection Logic === */
+let selecting=false,selectedCells=[];
+document.getElementById('puzzleGrid').addEventListener('mousedown',e=>{
+  if(!e.target.classList.contains('cell'))return;selecting=true;toggleSelect(e.target);
+});
+document.addEventListener('mouseup',()=>{
+  if(selecting){checkSelection();
+    selectedCells.forEach(c=>c.classList.remove('selected'));selectedCells=[];}
+  selecting=false;
+});
+document.getElementById('puzzleGrid').addEventListener('mouseover',e=>{
+  if(selecting&&e.target.classList.contains('cell'))toggleSelect(e.target);
+});
+function toggleSelect(cell){
+  if(!selectedCells.includes(cell)){cell.classList.add('selected');selectedCells.push(cell);}
+}
+
+/* === Pop-up & Progress === */
+function showPopup(info){
+  const p=document.getElementById('popup');
+  p.innerHTML=`<img src="${info.img}" alt="${info.word} dish">
+  <h4>${info.flag} ${info.word}</h4>
+  <p><strong>${info.country}</strong><br>${info.fact}</p>
+  <a href="${info.link}" target="_blank">Learn More →</a>`;
+  p.classList.remove('hidden');setTimeout(()=>p.classList.add('hidden'),4000);
+}
+function checkSelection(){
+  const selectedWord=selectedCells.map(c=>c.textContent).join('');
+  const reversed=selectedWord.split('').reverse().join('');
+  const match=wordsData.find(w=>w.word===selectedWord||w.word===reversed);
+  if(match){
+    selectedCells.forEach(c=>c.classList.add('found'));
+    drumSound.currentTime=0;drumSound.play();
+    if(!foundWords.includes(match.word)){
+      foundWords.push(match.word);
+      showPopup(match);
+      updateProgress();
+    }
+  }
+}
+function updateProgress(){
+  const pct=(foundWords.length/words.length)*100;
+  document.getElementById('progressBar').style.width=pct+'%';
+  if(foundWords.length===words.length){
+    drumSound.play();
+    setTimeout(()=>{
+      document.getElementById('puzzleGrid').style.display='none';
+      document.getElementById('wordList').style.display='none';
+      document.getElementById('progressContainer').style.display='none';
+      document.getElementById('completionScene').classList.remove('hidden');
+    },1000);
+  }
+}
+
+/* === Gift Reveal === */
+document.addEventListener('click',e=>{
+  if(e.target.classList.contains('gift')){
+    const r=document.getElementById('recipeReveal');let t='';
+    if(e.target.dataset.recipe==='north')t="<h4>Moroccan Tagine</h4><p>Slow-cooked with preserved lemon and spices.</p>";
+    if(e.target.dataset.recipe==='west')t="<h4>Jollof Rice</h4><p>Spicy tomato rice shared from Senegal to Nigeria.</p>";
+    if(e.target.dataset.recipe==='east')t="<h4>Matoke Stew</h4><p>Banana comfort dish from Uganda.</p>";
+    r.innerHTML=t;
+  }
+});
+
+/* === Initialize === */
+const grid=placeWords(emptyGrid());
+renderGrid(grid);renderWords();
+</script>
