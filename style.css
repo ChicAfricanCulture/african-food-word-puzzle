@@ -1,0 +1,58 @@
+/* Sahara Desert Chic with gold accents; respects prefers-reduced-motion */
+:root{
+  --sand:#f4ead7; --dune:#e6d3b4; --amber:#c69c6d; --gold:#b8860b;
+  --ink:#3a2c20; --paper:#fffaf2; --accent:#7a5a2e; --found:#b8860b22;
+  --focus:#b8860b66;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:linear-gradient(180deg,var(--sand),var(--dune))}
+.site-header{text-align:center;padding:1rem 1rem 0.5rem}
+h1{margin:.25rem 0 0;font-weight:800;letter-spacing:.3px}
+.tagline{margin:.25rem auto 1rem;max-width:40rem}
+.controls{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap}
+.btn{background:var(--amber);color:white;border:0;border-radius:999px;padding:.6rem 1rem;font-weight:700;cursor:pointer}
+.btn:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.btn[aria-pressed="true"]{filter:saturate(60%)}
+
+.app{display:grid;grid-template-columns:300px 1fr;gap:1rem;max-width:1100px;margin:0 auto;padding:1rem}
+@media (max-width:900px){.app{grid-template-columns:1fr}}
+.legend{background:var(--paper);border:1px solid #e7dcc6;border-radius:12px;padding:.75rem}
+.legend-title{margin:.25rem 0 .5rem}
+.word-list{list-style:none;margin:0;padding:0;columns:2;column-gap:1rem}
+@media (max-width:520px){.word-list{columns:1}}
+.word-list li{margin:.25rem 0;padding:.25rem .4rem;border-radius:8px}
+.word-list li.found{background:var(--found);text-decoration:line-through}
+
+.grid-wrap{display:flex;justify-content:center;align-items:center}
+.grid{--size:12;display:grid;grid-template-columns:repeat(var(--size), clamp(28px,7.2vw,48px));gap:2px;user-select:none;touch-action:none;background-color:#e9dfc9;padding:6px;border-radius:12px;border:1px solid #e1d4b8;box-shadow:0 6px 20px #00000012}
+.cell{display:flex;justify-content:center;align-items:center;background:#fffaf2;border-radius:6px;font-weight:800;letter-spacing:.5px;height:clamp(28px,7.2vw,48px)}
+.cell.selected{outline:3px solid var(--gold)}
+.cell.path{background:linear-gradient(180deg,#fff7e7,#fff0d6)}
+.cell.found{background:linear-gradient(180deg,#fff2cc,#ffe9b3);position:relative}
+.cell.found::after{content:"";position:absolute;inset:0;border:2px solid var(--gold);border-radius:6px}
+
+.info{margin:0 auto;max-width:1100px;padding:0 1rem}
+.info .card{margin:1rem 0;padding:1rem;border-left:6px solid var(--amber);background:var(--paper);border-radius:10px}
+.info .country{font-weight:800;color:var(--accent)}
+
+.reward{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.6)}
+.reward-card{background:var(--paper);max-width:560px;margin:1rem;border-radius:16px;box-shadow:0 10px 40px #00000033;padding:1rem 1rem 1.25rem;text-align:center}
+.reward-img{width:100%;height:auto;border-radius:12px;object-fit:cover}
+.gift-row{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin:.75rem 0 1rem}
+.gift{display:inline-block;background:var(--gold);color:#fff;padding:.65rem 1rem;border-radius:10px;text-decoration:none;font-weight:800}
+.gift:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+.site-footer{padding:1rem;text-align:center}
+
+/* Subtle parchment texture */
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none;
+  background-image:url('assets/parchment-20.png'); /* 20% opacity PNG */
+  opacity:.2; mix-blend-mode:multiply;
+}
+
+/* Prefers reduced motion */
+@media (prefers-reduced-motion: reduce){
+  *{animation:none;transition:none}
+}
