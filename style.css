@@ -342,7 +342,26 @@ body::before{
   mix-blend-mode:multiply;
   z-index:-1;
 }
+/* Add this to your style.css to ensure grid visibility */
+.grid {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
 
+.cell {
+  min-height: 30px;
+  min-width: 30px;
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+#gridWrap {
+  visibility: visible !important;
+}
 /* Prefers reduced motion */
 @media (prefers-reduced-motion: reduce){
   *,:before,:after{
