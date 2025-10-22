@@ -1,222 +1,468 @@
-<!-- 🌍 Taste of Africa Word Puzzle – Version 6: Cinematic Ending -->
-<div id="africanWordPuzzleV6" class="desert-theme">
-  <h2>African Cusine and Crosswords</h2>
-  <p>Find the hidden African foods and ingredients. When you complete the journey, Africa smiles back at you.</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>African Food Word Puzzle</title>
+<meta name="description" content="Find 10 African foods in a Sahara-chic word puzzle. Unlock proverbs and a celebratory finale." />
+<style>
+:root{
+  --bg:#fff9f1; --fg:#3b2a1f; --accent:#c39a48; --accent-2:#e6c368; --grid:#f1e4ce; --found:#d4af37;
+  --cell:#4f2c1d; --muted:#8b6b55; --proverb:#fff4da; --shadow:0 10px 30px rgba(0,0,0,.12);
+}
+.dark{
+  --bg:#0e1320; --fg:#e8e6e3; --accent:#e6c368; --accent-2:#c39a48; --grid:#182036; --found:#ffd54a;
+  --cell:#f7f3ea; --muted:#b9b7b3; --proverb:#1c243c; --shadow:0 10px 30px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Inter,Arial,sans-serif;background:var(--bg);color:var(--fg)}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;gap:10px}
+h1{font-weight:800;margin:0;font-size:22px;letter-spacing:.3px}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+button{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#4f2c1d;border:0;border-radius:999px;padding:10px 14px;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+button.secondary{background:transparent;border:2px solid var(--accent);color:var(--fg)}
+button:disabled{opacity:.6;cursor:not-allowed}
 
-  <!-- Ambient & Drum Audio -->
-  <audio id="drumSound" src="https://yourdomain.com/audio/african-drum.mp3" preload="auto"></audio>
-  <audio id="windSound" src="https://yourdomain.com/audio/desert-wind.mp3" loop autoplay></audio>
+.container{max-width:1100px;margin:0 auto;padding:10px 16px 40px}
+.main{display:grid;grid-template-columns:1fr 320px;gap:18px}
+@media (max-width:900px){.main{grid-template-columns:1fr}}
+.panel{background:var(--grid);border-radius:20px;padding:14px;box-shadow:var(--shadow)}
 
-  <!-- Puzzle -->
-  <div id="puzzleGrid" class="grid"></div>
-  <div id="wordList"></div>
-  <div id="progressContainer"><div id="progressBar"></div></div>
+.grid-wrap{position:relative;overflow:hidden;border-radius:18px;padding:10px;background:var(--bg);border:3px solid var(--accent);box-shadow:var(--shadow)}
+.grid{display:grid;grid-template-columns:repeat(14, min(52px,6.8vw));justify-content:center;gap:6px;padding:8px}
+.cell{
+  width:min(52px,6.8vw);height:min(52px,6.8vw);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:clamp(16px,2.4vw,22px);
+  color:var(--cell); background:linear-gradient(180deg, #ffffff10, #00000005);
+  border-radius:10px; user-select:none; cursor:pointer; position:relative;
+  transition:transform .05s ease;
+}
+.cell.sel{outline:3px solid var(--accent);outline-offset:-3px;box-shadow:0 0 0 2px #00000010 inset}
+.cell.path{background:linear-gradient(180deg,#fffbe6,#fff2c2)}
+.cell.found{background:linear-gradient(180deg,#fff0b3,#ffe07a);color:#3b2a1f;animation:pop .25s ease}
+@keyframes pop{0%{transform:scale(1.1)}100%{transform:scale(1)}}
 
-  <!-- Pop-up Info -->
-  <div id="popup" class="popup hidden"></div>
+.africa-mask .grid{
+  -webkit-mask: url('#africa-mask'); mask: url('#africa-mask');
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+  -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+}
 
-  <!-- Cinematic Completion Scene -->
-  <div id="completionScene" class="hidden completion-scene">
-    <img src="https://blogger.googleusercontent.com/img/b/SmilingAfricanWoman.jpg"
-         alt="Smiling African woman" class="completion-photo">
-    <div class="gift-grid fadeUp">
-      <div class="gift" data-recipe="north">North African Spice Journey</div>
-      <div class="gift" data-recipe="west">West African Comfort Bowl</div>
-      <div class="gift" data-recipe="east">East African Market Meal</div>
-    </div>
-    <div id="recipeReveal"></div>
+.sidebar h2{margin:8px 8px 14px;font-size:18px}
+.words{display:grid;gap:8px}
+.word-item{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:#ffffff20;border:2px solid transparent;border-radius:14px;padding:10px 12px;
+  transition:transform .15s ease, border-color .2s ease, background .2s ease;
+}
+.word-item .tag{font-weight:800}
+.word-item .flag{font-size:18px}
+.word-item.found{
+  text-decoration:line-through;color:var(--muted); transform:scale(.97);
+  border-color:var(--accent); background:#00000005;
+}
+.legend{font-size:13px;color:var(--muted);margin-top:10px}
+
+.proverb{margin-top:14px;background:var(--proverb);border-left:6px solid var(--accent);padding:12px 14px;border-radius:12px;display:none}
+.proverb.show{display:block;animation:fade .4s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.instructions{
+  position:fixed;left:50%;top:16px;transform:translateX(-50%);
+  background:linear-gradient(90deg,var(--accent),var(--accent-2));
+  color:#4f2c1d;padding:10px 14px;border-radius:999px;font-weight:800;box-shadow:var(--shadow);z-index:30
+}
+.hidden{display:none}
+
+.finale{display:none;text-align:center;margin-top:18px;position:relative;overflow:hidden;background:var(--grid);padding:16px;border-radius:20px;box-shadow:var(--shadow)}
+.finale img{width:min(90%,520px);border-radius:20px;opacity:0;transform:scale(.96);transition:opacity 2s ease, transform 2s ease}
+.finale.show img{opacity:1;transform:scale(1)}
+.gold-shimmer{position:absolute;top:0;left:-150%;width:50%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,215,0,.25),transparent);transform:skewX(-20deg);animation:shimmer 4s infinite;pointer-events:none}
+@keyframes shimmer{0%{left:-150%}50%,100%{left:150%}}
+
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.badge{border:2px solid var(--accent);border-radius:999px;padding:8px 10px;font-weight:800}
+
+.toggle{background:transparent;border:2px solid var(--accent);color:var(--fg)}
+.toggle.active{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#4f2c1d}
+
+footer{margin-top:18px;font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<svg width="0" height="0" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+  <!-- Rough Africa silhouette path used as a mask -->
+  <defs>
+    <mask id="africa-mask" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">
+      <rect x="0" y="0" width="1" height="1" fill="black"></rect>
+      <!-- white path reveals; this is a simplified silhouette -->
+      <path d="M0.32,0.08 L0.55,0.05 L0.7,0.12 L0.9,0.18 L0.95,0.3 L0.9,0.45 L0.8,0.52 L0.78,0.62 L0.72,0.7 L0.7,0.78 L0.6,0.86 L0.52,0.95 L0.4,0.92 L0.32,0.84 L0.25,0.76 L0.16,0.7 L0.12,0.62 L0.08,0.52 L0.1,0.42 L0.12,0.35 L0.18,0.28 L0.22,0.2 Z" fill="white"/>
+    </mask>
+  </defs>
+</svg>
+
+<header>
+  <h1>🧩 African Food Word Puzzle</h1>
+  <div class="controls">
+    <button id="darkToggle" class="toggle" title="Toggle dark mode">🌞/🌙</button>
+    <button id="shapeToggle" class="toggle" title="Toggle Africa shape">🗺 Africa Shape</button>
+    <button id="resetBtn" class="secondary">Reset</button>
   </div>
+</header>
+
+<div class="instructions" id="hintMsg">Find all 10 African foods. Words go in any direction. Tap/drag to select — or tap first & last.</div>
+
+<div class="container">
+  <div class="main">
+    <div class="panel">
+      <div class="grid-wrap" id="gridWrap">
+        <div class="grid" id="grid"></div>
+      </div>
+
+      <div class="toolbar">
+        <span class="badge" id="progress">Found 0 / 10</span>
+        <button id="hintFirst" class="secondary">Hint: First Letter</button>
+        <button id="hintPulse" class="secondary">Hint: Pulse Word</button>
+        <button id="hintReveal" class="secondary">Reveal Word</button>
+      </div>
+
+      <div id="proverb" class="proverb"></div>
+
+      <div class="finale" id="finale">
+        <img src="assets/images/african-woman-smile.jpg" alt="Smiling African woman" />
+        <div class="gold-shimmer"></div>
+        <h3>Congratulations! You found all 10 🎉</h3>
+      </div>
+
+      <audio id="sndFound" src="assets/audio/found.mp3" preload="auto"></audio>
+      <audio id="drumBeat" src="assets/audio/drum-beat.mp3" preload="auto"></audio>
+      <audio id="desertWind" src="assets/audio/desert-wind.mp3" preload="auto" loop></audio>
+    </div>
+
+    <aside class="panel sidebar">
+      <h2>Words</h2>
+      <div id="wordList" class="words"></div>
+      <div class="legend">Tap a word after the puzzle to learn more on your website.</div>
+    </aside>
+  </div>
+
+  <footer>Design: Sahara chic with gold accents • Tip: Use dark mode for night play.</footer>
 </div>
 
-<style>
-/* === Overall Desert Theme === */
-.desert-theme{
-  font-family:'Lora',serif;
-  background:linear-gradient(180deg,#f8efe3 0%,#f4e4c1 100%);
-  padding:20px;border-radius:10px;color:#4a3b22;
-  text-align:center;max-width:800px;margin:auto;
-  box-shadow:0 4px 12px rgba(0,0,0,0.1);
-  overflow:hidden;position:relative;
-}
-/* === Grid === */
-.grid{display:grid;grid-template-columns:repeat(10,1fr);
-  gap:5px;justify-content:center;margin:20px auto;width:max-content;}
-.cell{width:35px;height:35px;background:#fff5e1;border:1px solid #d4af37;
-  border-radius:5px;display:flex;align-items:center;justify-content:center;
-  font-weight:bold;cursor:pointer;transition:0.2s;user-select:none;}
-.cell:hover{background:#f2d98d;transform:scale(1.05);}
-.selected{background:#d4af37;color:#fff;}
-.found{background:#b99629;color:#fff;animation:shimmer 1s ease-in-out;}
-@keyframes shimmer{
-  0%{box-shadow:0 0 0px #d4af37;}
-  50%{box-shadow:0 0 15px #d4af37;}
-  100%{box-shadow:0 0 0px #d4af37;}
-}
-
-/* === Progress Bar === */
-#progressContainer{width:100%;height:15px;background:#f2e6cc;
-  border-radius:10px;overflow:hidden;margin:15px 0;}
-#progressBar{height:15px;width:0%;background:#d4af37;transition:width 0.4s;}
-
-/* === Popup Info === */
-.popup{
-  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-  background:#fffbe9;border:2px solid #d4af37;padding:15px 20px;border-radius:10px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.25);z-index:1000;width:85%;max-width:320px;
-  color:#4a3b22;font-size:0.95em;animation:floatUp 4s forwards;}
-.popup img{width:100%;border-radius:8px;margin-bottom:10px;}
-.popup a{color:#b57e00;font-weight:bold;text-decoration:none;}
-.popup a:hover{text-decoration:underline;}
-@keyframes floatUp{
-  0%{opacity:0;transform:translate(-50%,-60%) scale(0.9);}
-  10%,80%{opacity:1;transform:translate(-50%,-50%) scale(1);}
-  100%{opacity:0;transform:translate(-50%,-40%) scale(1.05);}
-}
-.hidden{display:none;}
-
-/* === Gifts & Completion Scene === */
-.gift-grid{display:flex;justify-content:center;gap:15px;margin-top:15px;flex-wrap:wrap;}
-.gift{background:#fff5e1;border:2px solid #d4af37;padding:15px;border-radius:10px;
-  cursor:pointer;width:180px;transition:0.3s;}
-.gift:hover{background:#d4af37;color:#fff;transform:scale(1.05);}
-.completion-scene{text-align:center;animation:fadeInScene 3s forwards;}
-.completion-photo{width:100%;max-width:600px;border-radius:12px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.3);margin:auto;display:block;}
-@keyframes fadeInScene{from{opacity:0;transform:scale(0.95);}to{opacity:1;transform:scale(1);}}
-.fadeUp{animation:fadeUp 2.5s ease-in-out;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(40px);}to{opacity:1;transform:translateY(0);}}
-#recipeReveal{margin-top:20px;padding:15px;border:1px solid #d4af37;
-  border-radius:8px;background:#fffbe9;}
-</style>
-
 <script>
-/* === Audio === */
-const drumSound=document.getElementById('drumSound');
-const windSound=document.getElementById('windSound');
-windSound.volume=0.25;
-
-/* === Word Data === */
-const wordsData=[
-  {word:"JOLLOF",country:"West Africa",flag:"🇳🇬",
-   fact:"Jollof rice unites West Africa; each country claims the best recipe!",
-   img:"https://blogger.googleusercontent.com/img/b/JollofRice.jpg",
-   link:"https://www.africanfood.recipes/2024/02/jollof-rice.html"},
-  {word:"EGUSI",country:"Nigeria & Ghana",flag:"🇳🇬",
-   fact:"Egusi seeds are ground melon seeds used to thicken hearty stews.",
-   img:"https://blogger.googleusercontent.com/img/b/EgusiSoup.jpg",
-   link:"https://www.africanfood.recipes/2024/02/egusi-soup.html"},
-  {word:"FUFU",country:"Ghana",flag:"🇬🇭",
-   fact:"Fufu means 'to mash' in Akan and is made from cassava or plantain.",
-   img:"https://blogger.googleusercontent.com/img/b/FufuBowl.jpg",
-   link:"https://www.africanfood.recipes/2024/03/fufu-fries.html"},
-  {word:"UGALI",country:"Kenya",flag:"🇰🇪",
-   fact:"Ugali is a beloved maize-flour staple of East Africa.",
-   img:"https://blogger.googleusercontent.com/img/b/UgaliKenya.jpg",
-   link:"https://www.africanfood.recipes/2024/03/ugali.html"},
-  {word:"INJERA",country:"Ethiopia",flag:"🇪🇹",
-   fact:"Injera is a sourdough flatbread made from teff flour and shared communally.",
-   img:"https://blogger.googleusercontent.com/img/b/InjeraEthiopia.jpg",
-   link:"https://www.africanfood.recipes/2024/04/injera.html"}
+/* ===== Data ===== */
+const WORDS = [
+  { text:"JOLLOF", country:"Nigeria", flag:"🇳🇬", url:"https://africanfood.recipes/search?q=jollof" },
+  { text:"INJERA", country:"Ethiopia", flag:"🇪🇹", url:"https://africanfood.recipes/search?q=injera" },
+  { text:"FUFU", country:"Ghana", flag:"🇬🇭", url:"https://africanfood.recipes/search?q=fufu" },
+  { text:"TAGINE", country:"Morocco", flag:"🇲🇦", url:"https://africanfood.recipes/search?q=tagine" },
+  { text:"NDOLE", country:"Cameroon", flag:"🇨🇲", url:"https://africanfood.recipes/search?q=ndole" },
+  { text:"BOBOTIE", country:"South Africa", flag:"🇿🇦", url:"https://africanfood.recipes/search?q=bobotie" },
+  { text:"THIEBOUDIENNE", country:"Senegal", flag:"🇸🇳", url:"https://africanfood.recipes/search?q=Thieboudienne" },
+  { text:"UGALI", country:"Kenya", flag:"🇰🇪", url:"https://africanfood.recipes/search?q=ugali" },
+  { text:"KACHUMBARI", country:"Tanzania", flag:"🇹🇿", url:"https://africanfood.recipes/search?q=Kachumbari" },
+  { text:"SUYA", country:"Nigeria", flag:"🇳🇬", url:"https://africanfood.recipes/search?q=Suya" }
 ];
-const words=wordsData.map(w=>w.word);
-const gridSize=10;let foundWords=[];
 
-/* === Grid Setup === */
-function emptyGrid(){return Array.from({length:gridSize},()=>Array(gridSize).fill(''));}
-function placeWords(grid){
-  words.forEach(w=>{
-    let placed=false;
-    while(!placed){
-      const row=Math.floor(Math.random()*gridSize);
-      const start=Math.floor(Math.random()*(gridSize-w.length));
-      if(grid[row].slice(start,start+w.length).every(c=>c==='')){
-        for(let i=0;i<w.length;i++)grid[row][start+i]=w[i];
-        placed=true;
+const PROVERBS = [
+  "Wisdom is like fire; people take it from others. — Hemba (Congo)",
+  "Rain does not fall on one roof alone. — Nigeria",
+  "No matter how long the night, the day is sure to come.",
+  "However long the river, it will reach the sea. — Ghana",
+  "When there is no enemy within, the enemies outside cannot hurt you."
+];
+
+/* ===== State ===== */
+const SIZE = 14;
+const DIRS = [
+  [1,0],[0,1],[1,1],[-1,0],[0,-1],[-1,-1],[1,-1],[-1,1]
+];
+let grid = Array.from({length:SIZE},()=>Array(SIZE).fill(""));
+let placed = []; // {text, cells:[{r,c}]}
+let foundCount = 0;
+let selected = []; // current selection cells [{r,c,el}]
+let startTap = null; // for tap-to-select
+
+/* ===== Helpers ===== */
+const $ = (q,root=document)=>root.querySelector(q);
+function rand(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function inBounds(r,c){ return r>=0 && r<SIZE && c>=0 && c<SIZE; }
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+/* ===== Build Word List UI ===== */
+const wordList = $("#wordList");
+function buildWordList(){
+  wordList.innerHTML = "";
+  WORDS.forEach((w,i)=>{
+    const div = document.createElement("div");
+    div.className = "word-item";
+    div.dataset.word = w.text;
+    div.innerHTML = `<span class="flag">${w.flag}</span><span class="tag">${w.text}</span><span class="country">${w.country}</span>`;
+    wordList.appendChild(div);
+  });
+}
+
+/* ===== Place Words in Grid ===== */
+function tryPlace(word){
+  const dirs = shuffle(DIRS.slice());
+  for(const [dr,dc] of dirs){
+    for(let attempt=0; attempt<200; attempt++){
+      const r0 = rand(0,SIZE-1), c0 = rand(0,SIZE-1);
+      let r=r0, c=c0; let ok=true; const cells=[];
+      for(let k=0;k<word.length;k++){
+        if(!inBounds(r,c)){ ok=false; break; }
+        const ch=grid[r][c];
+        if(ch!=="" && ch!==word[k]){ ok=false; break; }
+        cells.push({r,c});
+        r+=dr; c+=dc;
+      }
+      if(ok){
+        cells.forEach((p,idx)=> grid[p.r][p.c]=word[idx]);
+        return cells;
       }
     }
-  });
-  for(let r=0;r<gridSize;r++){for(let c=0;c<gridSize;c++){
-    if(grid[r][c]==='')grid[r][c]=String.fromCharCode(65+Math.floor(Math.random()*26));}}
-  return grid;
-}
-function renderGrid(grid){
-  const cont=document.getElementById('puzzleGrid');cont.innerHTML='';
-  grid.forEach((row,r)=>{row.forEach((ltr,c)=>{
-    const d=document.createElement('div');
-    d.textContent=ltr;d.className='cell';d.dataset.row=r;d.dataset.col=c;
-    cont.appendChild(d);
-  });});
-}
-function renderWords(){
-  document.getElementById('wordList').innerHTML='<strong>Words:</strong> '+words.join(', ');
+  }
+  return null;
 }
 
-/* === Selection Logic === */
-let selecting=false,selectedCells=[];
-document.getElementById('puzzleGrid').addEventListener('mousedown',e=>{
-  if(!e.target.classList.contains('cell'))return;selecting=true;toggleSelect(e.target);
-});
-document.addEventListener('mouseup',()=>{
-  if(selecting){checkSelection();
-    selectedCells.forEach(c=>c.classList.remove('selected'));selectedCells=[];}
-  selecting=false;
-});
-document.getElementById('puzzleGrid').addEventListener('mouseover',e=>{
-  if(selecting&&e.target.classList.contains('cell'))toggleSelect(e.target);
-});
-function toggleSelect(cell){
-  if(!selectedCells.includes(cell)){cell.classList.add('selected');selectedCells.push(cell);}
-}
-
-/* === Pop-up & Progress === */
-function showPopup(info){
-  const p=document.getElementById('popup');
-  p.innerHTML=`<img src="${info.img}" alt="${info.word} dish">
-  <h4>${info.flag} ${info.word}</h4>
-  <p><strong>${info.country}</strong><br>${info.fact}</p>
-  <a href="${info.link}" target="_blank">Learn More →</a>`;
-  p.classList.remove('hidden');setTimeout(()=>p.classList.add('hidden'),4000);
-}
-function checkSelection(){
-  const selectedWord=selectedCells.map(c=>c.textContent).join('');
-  const reversed=selectedWord.split('').reverse().join('');
-  const match=wordsData.find(w=>w.word===selectedWord||w.word===reversed);
-  if(match){
-    selectedCells.forEach(c=>c.classList.add('found'));
-    drumSound.currentTime=0;drumSound.play();
-    if(!foundWords.includes(match.word)){
-      foundWords.push(match.word);
-      showPopup(match);
-      updateProgress();
+function fillRandom(){
+  for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){
+    if(grid[r][c]===""){
+      grid[r][c]=String.fromCharCode(65+rand(0,25));
     }
   }
 }
-function updateProgress(){
-  const pct=(foundWords.length/words.length)*100;
-  document.getElementById('progressBar').style.width=pct+'%';
-  if(foundWords.length===words.length){
-    drumSound.play();
-    setTimeout(()=>{
-      document.getElementById('puzzleGrid').style.display='none';
-      document.getElementById('wordList').style.display='none';
-      document.getElementById('progressContainer').style.display='none';
-      document.getElementById('completionScene').classList.remove('hidden');
-    },1000);
+
+/* ===== Render Grid ===== */
+const gridEl = $("#grid");
+function renderGrid(){
+  gridEl.innerHTML="";
+  gridEl.style.setProperty("--size",SIZE);
+  for(let r=0;r<SIZE;r++){
+    for(let c=0;c<SIZE;c++){
+      const cell=document.createElement("div");
+      cell.className="cell";
+      cell.textContent=grid[r][c];
+      cell.dataset.r=r; cell.dataset.c=c;
+      gridEl.appendChild(cell);
+    }
   }
 }
 
-/* === Gift Reveal === */
-document.addEventListener('click',e=>{
-  if(e.target.classList.contains('gift')){
-    const r=document.getElementById('recipeReveal');let t='';
-    if(e.target.dataset.recipe==='north')t="<h4>Moroccan Tagine</h4><p>Slow-cooked with preserved lemon and spices.</p>";
-    if(e.target.dataset.recipe==='west')t="<h4>Jollof Rice</h4><p>Spicy tomato rice shared from Senegal to Nigeria.</p>";
-    if(e.target.dataset.recipe==='east')t="<h4>Matoke Stew</h4><p>Banana comfort dish from Uganda.</p>";
-    r.innerHTML=t;
+/* ===== Selection Logic (drag + tap endpoints) ===== */
+let isMouseDown=false;
+
+function clearSelection(){
+  selected.forEach(s=>s.el.classList.remove("sel","path"));
+  selected=[];
+}
+
+function lineBetween(a,b){
+  const dr = Math.sign(b.r - a.r);
+  const dc = Math.sign(b.c - a.c);
+  const lenR = Math.abs(b.r - a.r);
+  const lenC = Math.abs(b.c - a.c);
+  if(!(dr===0 || dc===0 || lenR===lenC)) return null; // must be straight or diagonal
+
+  const length = Math.max(lenR, lenC)+1;
+  const cells=[];
+  for(let i=0;i<length;i++){
+    const rr=a.r + dr*i, cc=a.c + dc*i;
+    if(!inBounds(rr,cc)) return null;
+    cells.push({r:rr,c:cc,el:cellAt(rr,cc)});
   }
+  return cells;
+}
+function cellAt(r,c){ return gridEl.children[r*SIZE + c]; }
+
+function startSelect(cell){
+  clearSelection();
+  const r=+cell.dataset.r, c=+cell.dataset.c;
+  selected=[{r,c,el:cell}];
+  cell.classList.add("sel");
+}
+function extendSelect(toCell){
+  if(selected.length===0) return;
+  const a = selected[0];
+  const b = {r:+toCell.dataset.r,c:+toCell.dataset.c};
+  const cells = lineBetween(a,b);
+  if(!cells) return;
+  clearSelection();
+  selected=cells;
+  selected.forEach(s=>s.el.classList.add("path"));
+  selected[0].el.classList.add("sel");
+}
+
+function commitSelection(){
+  if(selected.length<2){ clearSelection(); return; }
+  const text = selected.map(s=>grid[s.r][s.c]).join("");
+  const rev = text.split("").reverse().join("");
+  const hit = placed.find(p => !p.found && (p.text===text || p.text===rev) && sameCells(p, selected));
+  if(hit){
+    hit.found=true;
+    selected.forEach(s=>s.el.classList.add("found"));
+    glowWordUI(hit.text);
+    playFound();
+    foundCount++;
+    updateProgress();
+    maybeProverb();
+    if(foundCount===WORDS.length) showFinale();
+  }
+  clearSelection();
+}
+function sameCells(p, sel){
+  // allow reverse
+  const a = p.cells.map(c=>`${c.r},${c.c}`).join("|");
+  const b = sel.map(c=>`${c.r},${c.c}`).join("|");
+  const br = sel.slice().reverse().map(c=>`${c.r},${c.c}`).join("|");
+  return a===b || a===br;
+}
+
+/* ===== UI Effects ===== */
+function glowWordUI(word){
+  const el = [...document.querySelectorAll(".word-item")].find(d=>d.dataset.word===word);
+  if(!el) return;
+  el.classList.add("found");
+  el.animate([{transform:"scale(1.05)"},{transform:"scale(1)"}],{duration:220});
+}
+function playFound(){ $("#sndFound").currentTime=0; $("#sndFound").play().catch(()=>{}); }
+function updateProgress(){ $("#progress").textContent=`Found ${foundCount} / ${WORDS.length}`; }
+
+function maybeProverb(){
+  const milestones=[3,6,9];
+  if(milestones.includes(foundCount)){
+    const box=$("#proverb");
+    box.textContent=pickRandom(PROVERBS);
+    box.classList.add("show");
+  }
+}
+
+/* ===== Finale ===== */
+function showFinale(){
+  const f=$("#finale");
+  f.classList.add("show");
+  f.style.display="block";
+  $("#drumBeat").play().catch(()=>{});
+  $("#desertWind").play().catch(()=>{});
+  // Make word list items clickable only after finish
+  document.querySelectorAll(".word-item").forEach((w,i)=>{
+    const data = WORDS.find(x=>x.text===w.dataset.word);
+    if(data) {
+      w.style.cursor="pointer";
+      w.addEventListener("click", ()=> window.open(data.url,"_blank"), {once:false});
+    }
+  });
+}
+
+/* ===== Hints ===== */
+function hintFirstLetter(){
+  const target = placed.find(p=>!p.found);
+  if(!target) return;
+  const first = target.cells[0];
+  pulseCell(first.r, first.c);
+}
+function hintPulseWord(){
+  const target = placed.find(p=>!p.found);
+  if(!target) return;
+  target.cells.forEach(c=>pulseCell(c.r,c.c));
+}
+function hintReveal(){
+  const target = placed.find(p=>!p.found);
+  if(!target) return;
+  target.found=true;
+  target.cells.forEach(c=>cellAt(c.r,c.c).classList.add("found"));
+  glowWordUI(target.text);
+  playFound();
+  foundCount++; updateProgress(); maybeProverb();
+  if(foundCount===WORDS.length) showFinale();
+}
+function pulseCell(r,c){
+  const el = cellAt(r,c);
+  el.animate([{boxShadow:"0 0 0 0 rgba(255,215,0,0.8)"},
+              {boxShadow:"0 0 0 10px rgba(255,215,0,0)"}],
+              {duration:900,easing:"ease"});
+}
+
+/* ===== Build Game ===== */
+function resetGame(){
+  foundCount=0; updateProgress();
+  grid = Array.from({length:SIZE},()=>Array(SIZE).fill(""));
+  placed = [];
+  $("#proverb").classList.remove("show");
+  $("#proverb").textContent="";
+  $("#finale").style.display="none";
+  $("#desertWind").pause(); $("#drumBeat").pause();
+
+  // place all words
+  const order = shuffle(WORDS.slice());
+  for(const w of order){
+    const cells = tryPlace(w.text);
+    if(!cells){ console.warn("Failed to place:", w.text); continue; }
+    placed.push({text:w.text, cells, found:false});
+  }
+  fillRandom();
+  renderGrid();
+  buildWordList();
+
+  // brief instruction bubble
+  const msg=$("#hintMsg");
+  msg.classList.remove("hidden");
+  setTimeout(()=>msg.classList.add("hidden"),3000);
+}
+
+/* ===== Events ===== */
+gridEl.addEventListener("mousedown", e=>{
+  if(!e.target.classList.contains("cell")) return;
+  isMouseDown=true; startSelect(e.target);
+});
+gridEl.addEventListener("mouseover", e=>{
+  if(!isMouseDown) return;
+  if(!e.target.classList.contains("cell")) return;
+  extendSelect(e.target);
+});
+document.addEventListener("mouseup", ()=>{
+  if(isMouseDown){ isMouseDown=false; commitSelection(); }
 });
 
-/* === Initialize === */
-const grid=placeWords(emptyGrid());
-renderGrid(grid);renderWords();
+/* Tap-to-select: tap first & last */
+gridEl.addEventListener("click", e=>{
+  if(!e.target.classList.contains("cell")) return;
+  const r=+e.target.dataset.r, c=+e.target.dataset.c;
+  if(!startTap){ startTap={r,c,el:e.target}; e.target.classList.add("sel"); return; }
+  const end={r,c,el:e.target};
+  const cells = lineBetween(startTap, end);
+  if(cells && cells.length>1){
+    clearSelection();
+    selected = cells; selected.forEach(s=>s.el.classList.add("path"));
+    commitSelection();
+  } else {
+    // restart selection
+    clearSelection();
+  }
+  startTap=null;
+});
+
+$("#resetBtn").addEventListener("click", resetGame);
+$("#hintFirst").addEventListener("click", hintFirstLetter);
+$("#hintPulse").addEventListener("click", hintPulseWord);
+$("#hintReveal").addEventListener("click", hintReveal);
+
+/* Dark mode */
+$("#darkToggle").addEventListener("click", ()=>{
+  document.body.classList.toggle("dark");
+  $("#darkToggle").classList.toggle("active");
+});
+
+/* Africa mask toggle */
+$("#shapeToggle").addEventListener("click", ()=>{
+  $("#gridWrap").classList.toggle("africa-mask");
+  $("#shapeToggle").classList.toggle("active");
+});
+
+/* Init */
+resetGame();
 </script>
+</body>
+</html>
