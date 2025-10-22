@@ -12,7 +12,7 @@ const WORDS = [
   {text:"SUYA",country:"Nigeria",flag:"🇳🇬",url:"https://africanfood.recipes/search?q=suya"}
 ];
 
-const SIZE = 15; // Increased size to make word placement easier
+const SIZE = 12;
 const DIRS = [[1,0],[0,1],[1,1],[-1,0],[0,-1],[-1,-1],[1,-1],[-1,1]];
 
 let grid = [];
@@ -20,6 +20,7 @@ let placed = [];
 let foundCount = 0;
 let isSelecting = false;
 let selectedCells = [];
+let hintsUsed = 0;
 
 const $ = s => document.querySelector(s);
 
@@ -34,15 +35,23 @@ function shuffle(a) {
   return a; 
 }
 
+// Audio functions
+function playAudio(audioId) {
+  const audio = document.getElementById(audioId);
+  if (audio) {
+    audio.play().catch(e => {
+      console.log(`Audio ${audioId} play failed:`, e);
+    });
+  }
+}
+
 // Game functions
 function tryPlace(word) {
   const dirs = shuffle([...DIRS]);
   const wordLen = word.length;
   
   for (const [dr, dc] of dirs) {
-    // Try multiple starting positions
     for (let attempt = 0; attempt < 100; attempt++) {
-      // Calculate max possible starting position for this direction
       let r0, c0;
       if (dr === 1) r0 = rand(0, SIZE - wordLen);
       else if (dr === -1) r0 = rand(wordLen - 1, SIZE - 1);
@@ -56,7 +65,6 @@ function tryPlace(word) {
       let ok = true;
       let cells = [];
       
-      // Check if word can be placed
       for (let k = 0; k < wordLen; k++) {
         if (!inBounds(r, c)) {
           ok = false;
@@ -73,7 +81,6 @@ function tryPlace(word) {
       }
       
       if (ok) {
-        // Place the word
         cells.forEach((cell, index) => {
           grid[cell.r][cell.c] = word[index];
         });
@@ -81,7 +88,6 @@ function tryPlace(word) {
       }
     }
   }
-  console.warn(`Could not place word: ${word}`);
   return null;
 }
 
@@ -110,26 +116,44 @@ function buildList() {
 function renderGrid() {
   const g = $("#grid");
   g.innerHTML = "";
-  g.style.gridTemplateColumns = `repeat(${SIZE}, 1fr)`;
   
   for (let r = 0; r < SIZE; r++) {
     for (let c = 0; c < SIZE; c++) {
       const cell = document.createElement("div");
       cell.className = "cell";
-      cell.textContent = grid[r][c] || "?";
+      cell.textContent = grid[r][c];
       cell.dataset.r = r;
       cell.dataset.c = c;
       g.appendChild(cell);
     }
   }
+}
+
+function giveHint() {
+  if (hintsUsed >= 3) {
+    alert("You've used all 3 hints!");
+    return;
+  }
   
-  console.log("Grid rendered with", SIZE * SIZE, "cells");
+  const unfoundWords = placed.filter(w => !w.found);
+  if (unfoundWords.length === 0) return;
+  
+  const randomWord = unfoundWords[Math.floor(Math.random() * unfoundWords.length)];
+  const randomCell = randomWord.cells[Math.floor(Math.random() * randomWord.cells.length)];
+  
+  const cellElement = document.querySelector(`[data-r="${randomCell.r}"][data-c="${randomCell.c}"]`);
+  if (cellElement) {
+    cellElement.classList.add('hint-active');
+    setTimeout(() => {
+      cellElement.classList.remove('hint-active');
+    }, 2000);
+  }
+  
+  hintsUsed++;
+  alert(`Hint ${hintsUsed}/3: Look around this highlighted letter!`);
 }
 
 function resetGame() {
-  console.log("Resetting game...");
-  
-  // Initialize empty grid
   grid = [];
   for (let r = 0; r < SIZE; r++) {
     grid[r] = [];
@@ -142,10 +166,9 @@ function resetGame() {
   foundCount = 0;
   selectedCells = [];
   isSelecting = false;
+  hintsUsed = 0;
   
-  // Try to place words
   const order = shuffle([...WORDS]);
-  let placedCount = 0;
   
   for (const w of order) {
     const cells = tryPlace(w.text);
@@ -157,36 +180,25 @@ function resetGame() {
         country: w.country,
         flag: w.flag
       });
-      placedCount++;
     }
   }
   
-  console.log(`Placed ${placedCount} out of ${WORDS.length} words`);
-  
-  // Fill remaining cells with random letters
   fillRandom();
-  
-  // Render the grid
   renderGrid();
   buildList();
   
-  // Show the grid
   $("#gridWrap").style.visibility = "visible";
   $("#gridWrap").classList.remove("fade-out");
   $("#finale").classList.remove("show");
   
-  // Setup event listeners
   setupEventListeners();
 }
 
 function setupEventListeners() {
   const gridElement = $("#grid");
-  
-  // Remove existing listeners by replacing the grid
   const newGrid = gridElement.cloneNode(true);
   gridElement.parentNode.replaceChild(newGrid, gridElement);
   
-  // Add event listeners to new grid
   newGrid.addEventListener("mousedown", handleStartSelection);
   newGrid.addEventListener("touchstart", handleStartSelection, { passive: false });
 }
@@ -229,18 +241,10 @@ function handleEndSelection() {
   
   isSelecting = false;
   
-  // Get the selected word
   const selectedWord = selectedCells.map(cell => cell.textContent).join("");
-  console.log("Selected word:", selectedWord);
-  
-  // Check if it matches any placed word
-  const foundWord = placed.find(w => 
-    w.text === selectedWord && !w.found
-  );
+  const foundWord = placed.find(w => w.text === selectedWord && !w.found);
   
   if (foundWord) {
-    console.log("Found word:", foundWord.text);
-    // Mark word as found
     foundWord.found = true;
     foundWord.cells.forEach(cellPos => {
       const cellElement = document.querySelector(`[data-r="${cellPos.r}"][data-c="${cellPos.c}"]`);
@@ -250,28 +254,19 @@ function handleEndSelection() {
       }
     });
     
-    // Update word list
     updateWordList();
-    
-    // Play sound and check for completion
-    try {
-      $("#sndFound").play();
-    } catch (e) {
-      console.log("Audio play failed:", e);
-    }
+    playAudio('sndFound');
     foundCount++;
     
-    if (foundCount === placed.length) {
+    if (foundCount === WORDS.length) {
       setTimeout(showFinale, 800);
     }
   } else {
-    // Clear selection if no word found
     selectedCells.forEach(cell => cell.classList.remove("selected"));
   }
   
   selectedCells = [];
   
-  // Remove event listeners
   document.removeEventListener("mousemove", handleSelectionMove);
   document.removeEventListener("touchmove", handleSelectionMove);
   document.removeEventListener("mouseup", handleEndSelection);
@@ -296,40 +291,19 @@ function showFinale() {
     wrap.style.visibility = "hidden";
     fin.classList.add("show");
     
-    // Play celebration sounds
-    try {
-      $("#drumBeat").play();
-      $("#desertWind").play();
-    } catch (e) {
-      console.log("Audio play failed:", e);
-    }
+    playAudio('drumBeat');
+    playAudio('desertWind');
   }, 2800);
 }
 
 // UI Event Handlers
 $("#resetBtn").onclick = resetGame;
+$("#hintBtn").onclick = giveHint;
 
 $("#darkToggle").onclick = () => {
   document.body.classList.toggle("dark");
   $("#darkToggle").classList.toggle("active");
 };
 
-$("#shapeToggle").onclick = () => {
-  $("#gridWrap").classList.toggle("africa-mask");
-  $("#shapeToggle").classList.toggle("active");
-};
-
-// Initialize game when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-  console.log("DOM loaded, initializing game...");
-  resetGame();
-});
-
-// Also try initializing if DOM is already loaded
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', resetGame);
-} else {
-  setTimeout(resetGame, 100);
-}
-
-
+// Initialize game
+document.addEventListener('DOMContentLoaded', resetGame);
