@@ -156,6 +156,11 @@ body::before{
   50%,100% { left:150%; }
 }
 
+.icon-sankofa { color: var(--gold); }
+.icon-sankofa.shimmer:hover {
+  /* subtle shimmer on hover */
+  text-shadow: 0 0 6px rgba(184,134,11,.4);
+}
 
 /* Prefers reduced motion */
 @media (prefers-reduced-motion: reduce){
