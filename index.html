@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>🌀 Taste the Words of Africa</title>
 
-<link rel="icon" type="image/svg+xml" href="assets/icons/spiral.svg" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill='%23b8860b' d='M50 10a40 40 0 1 0 0 80 40 40 0 0 0 0-80zm0 10c16.57 0 30 13.43 30 30S66.57 80 50 80 20 66.57 20 50s13.43-30 30-30z'/><path fill='%23b8860b' d='M50 20a30 30 0 1 0 0 60 30 30 0 0 0 0-60zm0 10c11.05 0 20 8.95 20 20s-8.95 20-20 20-20-8.95-20-20 8.95-20 20-20z'/></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
 <script defer src="puzzle.js"></script>
 </head>
@@ -15,7 +18,7 @@
   <h1>🌀 Taste the Words of Africa</h1>
   <div class="controls">
     <button id="darkToggle" class="toggle">🌞 Light / 🌙 Dark</button>
-    <button id="shapeToggle" class="toggle">🗺 Africa Shape</button>
+    <button id="hintBtn" class="toggle">💡 Hint</button>
     <button id="resetBtn" class="toggle">🔄 Reset</button>
   </div>
 </header>
@@ -26,12 +29,14 @@
     <ul id="wordList" class="word-list"></ul>
   </aside>
 
-  <div class="grid-wrap" id="gridWrap">
-    <div class="grid" id="grid"></div>
-    <div class="finale" id="finale">
-      <img src="assets/images/african-woman-smile.jpg" alt="Smiling African woman" />
-      <div class="gold-shimmer"></div>
-      <h3>Congratulations! The elders nod in approval. The circle is complete.</h3>
+  <div class="game-area">
+    <div class="grid-wrap" id="gridWrap">
+      <div class="grid" id="grid"></div>
+      <div class="finale" id="finale">
+        <img src="assets/images/african-woman-smile.jpg" alt="Smiling African woman" />
+        <div class="gold-shimmer"></div>
+        <h3>Congratulations! The elders nod in approval. The circle is complete.</h3>
+      </div>
     </div>
   </div>
 </div>
