@@ -11,7 +11,7 @@ const WORDS = [
   {text:"SUYA",country:"Nigeria",flag:"🇳🇬",url:"https://africanfood.recipes/search?q=suya"}
 ];
 
-const SIZE = 12;
+const SIZE = 15; // Increased size to make word placement easier
 const DIRS = [[1,0],[0,1],[1,1],[-1,0],[0,-1],[-1,-1],[1,-1],[-1,1]];
 
 let grid = [];
@@ -36,34 +36,60 @@ function shuffle(a) {
 // Game functions
 function tryPlace(word) {
   const dirs = shuffle([...DIRS]);
+  const wordLen = word.length;
+  
   for (const [dr, dc] of dirs) {
-    for (let t = 0; t < 200; t++) {
-      const r0 = rand(0, SIZE - 1), c0 = rand(0, SIZE - 1);
-      let r = r0, c = c0, ok = true, cells = [];
+    // Try multiple starting positions
+    for (let attempt = 0; attempt < 100; attempt++) {
+      // Calculate max possible starting position for this direction
+      let r0, c0;
+      if (dr === 1) r0 = rand(0, SIZE - wordLen);
+      else if (dr === -1) r0 = rand(wordLen - 1, SIZE - 1);
+      else r0 = rand(0, SIZE - 1);
       
-      for (let k = 0; k < word.length; k++) {
-        if (!inBounds(r, c)) { ok = false; break; }
-        const ch = grid[r][c];
-        if (ch !== "" && ch !== word[k]) { ok = false; break; }
-        cells.push({r, c}); 
-        r += dr; 
+      if (dc === 1) c0 = rand(0, SIZE - wordLen);
+      else if (dc === -1) c0 = rand(wordLen - 1, SIZE - 1);
+      else c0 = rand(0, SIZE - 1);
+      
+      let r = r0, c = c0;
+      let ok = true;
+      let cells = [];
+      
+      // Check if word can be placed
+      for (let k = 0; k < wordLen; k++) {
+        if (!inBounds(r, c)) {
+          ok = false;
+          break;
+        }
+        const currentChar = grid[r][c];
+        if (currentChar !== "" && currentChar !== word[k]) {
+          ok = false;
+          break;
+        }
+        cells.push({r, c});
+        r += dr;
         c += dc;
       }
       
       if (ok) {
-        cells.forEach((p, i) => grid[p.r][p.c] = word[i]);
+        // Place the word
+        cells.forEach((cell, index) => {
+          grid[cell.r][cell.c] = word[index];
+        });
         return cells;
       }
     }
   }
+  console.warn(`Could not place word: ${word}`);
   return null;
 }
 
 function fillRandom() {
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   for (let r = 0; r < SIZE; r++) {
     for (let c = 0; c < SIZE; c++) {
-      if (!grid[r][c]) {
-        grid[r][c] = String.fromCharCode(65 + rand(0, 25));
+      if (grid[r][c] === "") {
+        grid[r][c] = letters[Math.floor(Math.random() * letters.length)];
       }
     }
   }
@@ -83,27 +109,43 @@ function buildList() {
 function renderGrid() {
   const g = $("#grid");
   g.innerHTML = "";
+  g.style.gridTemplateColumns = `repeat(${SIZE}, 1fr)`;
   
   for (let r = 0; r < SIZE; r++) {
     for (let c = 0; c < SIZE; c++) {
-      const d = document.createElement("div");
-      d.className = "cell";
-      d.textContent = grid[r][c];
-      d.dataset.r = r;
-      d.dataset.c = c;
-      g.appendChild(d);
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.textContent = grid[r][c] || "?";
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      g.appendChild(cell);
     }
   }
+  
+  console.log("Grid rendered with", SIZE * SIZE, "cells");
 }
 
 function resetGame() {
-  grid = Array.from({length: SIZE}, () => Array(SIZE).fill(""));
+  console.log("Resetting game...");
+  
+  // Initialize empty grid
+  grid = [];
+  for (let r = 0; r < SIZE; r++) {
+    grid[r] = [];
+    for (let c = 0; c < SIZE; c++) {
+      grid[r][c] = "";
+    }
+  }
+  
   placed = [];
   foundCount = 0;
   selectedCells = [];
   isSelecting = false;
   
+  // Try to place words
   const order = shuffle([...WORDS]);
+  let placedCount = 0;
+  
   for (const w of order) {
     const cells = tryPlace(w.text);
     if (cells) {
@@ -114,28 +156,36 @@ function resetGame() {
         country: w.country,
         flag: w.flag
       });
+      placedCount++;
     }
   }
   
+  console.log(`Placed ${placedCount} out of ${WORDS.length} words`);
+  
+  // Fill remaining cells with random letters
   fillRandom();
+  
+  // Render the grid
   renderGrid();
   buildList();
   
+  // Show the grid
   $("#gridWrap").style.visibility = "visible";
+  $("#gridWrap").classList.remove("fade-out");
   $("#finale").classList.remove("show");
   
-  // Clear any existing event listeners and reattach
+  // Setup event listeners
   setupEventListeners();
 }
 
 function setupEventListeners() {
   const gridElement = $("#grid");
   
-  // Clear existing listeners by cloning
+  // Remove existing listeners by replacing the grid
   const newGrid = gridElement.cloneNode(true);
   gridElement.parentNode.replaceChild(newGrid, gridElement);
   
-  // Add new listeners
+  // Add event listeners to new grid
   newGrid.addEventListener("mousedown", handleStartSelection);
   newGrid.addEventListener("touchstart", handleStartSelection, { passive: false });
 }
@@ -180,6 +230,7 @@ function handleEndSelection() {
   
   // Get the selected word
   const selectedWord = selectedCells.map(cell => cell.textContent).join("");
+  console.log("Selected word:", selectedWord);
   
   // Check if it matches any placed word
   const foundWord = placed.find(w => 
@@ -187,6 +238,7 @@ function handleEndSelection() {
   );
   
   if (foundWord) {
+    console.log("Found word:", foundWord.text);
     // Mark word as found
     foundWord.found = true;
     foundWord.cells.forEach(cellPos => {
@@ -201,10 +253,14 @@ function handleEndSelection() {
     updateWordList();
     
     // Play sound and check for completion
-    $("#sndFound").play().catch(e => console.log("Audio play failed:", e));
+    try {
+      $("#sndFound").play();
+    } catch (e) {
+      console.log("Audio play failed:", e);
+    }
     foundCount++;
     
-    if (foundCount === WORDS.length) {
+    if (foundCount === placed.length) {
       setTimeout(showFinale, 800);
     }
   } else {
@@ -224,7 +280,7 @@ function handleEndSelection() {
 function updateWordList() {
   const wordItems = $("#wordList").querySelectorAll("li");
   wordItems.forEach((li, index) => {
-    if (placed[index].found) {
+    if (placed[index] && placed[index].found) {
       li.classList.add("found");
     }
   });
@@ -240,8 +296,12 @@ function showFinale() {
     fin.classList.add("show");
     
     // Play celebration sounds
-    $("#drumBeat").play().catch(e => console.log("Drum audio failed:", e));
-    $("#desertWind").play().catch(e => console.log("Wind audio failed:", e));
+    try {
+      $("#drumBeat").play();
+      $("#desertWind").play();
+    } catch (e) {
+      console.log("Audio play failed:", e);
+    }
   }, 2800);
 }
 
@@ -258,5 +318,15 @@ $("#shapeToggle").onclick = () => {
   $("#shapeToggle").classList.toggle("active");
 };
 
-// Initialize game
-resetGame();
+// Initialize game when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  console.log("DOM loaded, initializing game...");
+  resetGame();
+});
+
+// Also try initializing if DOM is already loaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', resetGame);
+} else {
+  setTimeout(resetGame, 100);
+}
