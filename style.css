@@ -51,6 +51,100 @@ body::before{
   background-image:url('assets/parchment-20.png'); /* 20% opacity PNG */
   opacity:.2; mix-blend-mode:multiply;
 }
+/* Fade grid into golden specks then reveal finale */
+@keyframes fadeGold {
+  0% { opacity: 1; filter: brightness(1); }
+  50% { opacity: 0.6; filter: brightness(1.3); }
+  100% { opacity: 0; filter: brightness(1.8); }
+}
+@keyframes speckle {
+  0% { background-position: 0 0, 0 0; opacity: 1; }
+  100% { background-position: 200px 200px, -200px -200px; opacity: 0; }
+}
+.grid-wrap.fade-out {
+  animation: fadeGold 2.8s ease forwards;
+  position: relative;
+}
+.grid-wrap.fade-out::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(rgba(184,134,11,0.8) 1px, transparent 1px),
+    radial-gradient(rgba(230,195,104,0.8) 1px, transparent 1px);
+  background-size: 4px 4px, 6px 6px;
+  animation: speckle 2.8s ease forwards;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Fade grid into golden specks then reveal finale */
+@keyframes fadeGold {
+  0% { opacity: 1; filter: brightness(1); }
+  50% { opacity: 0.6; filter: brightness(1.3); }
+  100% { opacity: 0; filter: brightness(1.8); }
+}
+@keyframes speckle {
+  0% { background-position: 0 0, 0 0; opacity: 1; }
+  100% { background-position: 200px 200px, -200px -200px; opacity: 0; }
+}
+.grid-wrap.fade-out {
+  animation: fadeGold 2.8s ease forwards;
+  position: relative;
+}
+.grid-wrap.fade-out::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(rgba(184,134,11,0.8) 1px, transparent 1px),
+    radial-gradient(rgba(230,195,104,0.8) 1px, transparent 1px);
+  background-size: 4px 4px, 6px 6px;
+  animation: speckle 2.8s ease forwards;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Finale overlay (replaces puzzle) */
+.finale {
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  background:var(--sand);
+  border-radius:16px;
+  opacity:0;
+  z-index:20;
+  transition:opacity 2.5s ease;
+  overflow:hidden;
+}
+.finale.show { opacity:1; }
+
+.finale img {
+  width:min(90%,520px);
+  border-radius:16px;
+  opacity:0;
+  transform:scale(.95);
+  transition:opacity 2.5s ease, transform 2.5s ease;
+}
+.finale.show img { opacity:1; transform:scale(1); }
+
+.gold-shimmer {
+  position:absolute;
+  top:0;left:-150%;
+  width:50%;height:100%;
+  background:linear-gradient(120deg,transparent,rgba(255,215,0,.25),transparent);
+  transform:skewX(-20deg);
+  animation:shimmer 4s infinite;
+  pointer-events:none;
+}
+@keyframes shimmer {
+  0% { left:-150%; }
+  50%,100% { left:150%; }
+}
+
 
 /* Prefers reduced motion */
 @media (prefers-reduced-motion: reduce){
