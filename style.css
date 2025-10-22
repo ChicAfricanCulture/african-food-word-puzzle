@@ -161,6 +161,9 @@ body::before{
   /* subtle shimmer on hover */
   text-shadow: 0 0 6px rgba(184,134,11,.4);
 }
+.cell.found{background:var(--found);color:#3b2a1f;}
+.dark .cell{background:var(--dark-cell);color:var(--dark-text);}
+.dark .cell.found{background:#3a3118;color:#fcefb4;}
 
 /* Prefers reduced motion */
 @media (prefers-reduced-motion: reduce){
